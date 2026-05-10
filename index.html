@@ -3,21 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Allgemeinwissen: Deutscher Bund</title>
+    <title>Lern-Website: Der Deutsche Flickenteppich</title>
     <style>
         :root {
+            /* Farben für die Lernseite (Blau) */
             --bg-color: #f8f9fa;
             --text-color: #212529;
             --card-bg: #ffffff;
-            --accent-color: #27ae60; /* Eine andere Farbe zur Unterscheidung */
+            --accent-color: #007bff; 
             --secondary-color: #6c757d;
+            --quiz-bg: rgba(0, 123, 255, 0.1);
         }
 
         [data-theme="dark"] {
             --bg-color: #1a1a1a;
             --text-color: #f8f9fa;
             --card-bg: #2d2d2d;
+            --accent-color: #375a7f;
+            --quiz-bg: rgba(55, 90, 127, 0.2);
+        }
+
+        /* Farbwechsel für den Hintergrundwissen-Bereich (Grün) */
+        body.hintergrund-active {
+            --accent-color: #27ae60;
+            --quiz-bg: rgba(39, 174, 96, 0.1);
+        }
+        body.hintergrund-active[data-theme="dark"] {
             --accent-color: #2ecc71;
+            --quiz-bg: rgba(46, 204, 113, 0.2);
         }
 
         body {
@@ -35,38 +48,90 @@
             color: white;
             padding: 30px 20px;
             text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 20px auto;
             padding: 20px;
         }
 
-        .nav-buttons {
+        .controls {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
             margin-bottom: 20px;
         }
 
         button {
-            padding: 10px 15px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: bold;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .nav-btn.outline {
+            background-color: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        #theme-toggle {
+            background-color: var(--text-color);
+            color: var(--bg-color);
         }
 
         .card {
             background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
 
-        h2 { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 5px; }
-        
+        h2 { 
+            color: var(--accent-color); 
+            border-bottom: 2px solid var(--accent-color); 
+            padding-bottom: 5px; 
+            transition: color 0.3s, border-color 0.3s;
+        }
+
+        .quiz-box {
+            background-color: var(--quiz-bg);
+            border-left: 5px solid var(--accent-color);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        .answer {
+            display: none;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .show-btn {
+            background-color: var(--accent-color);
+            color: white;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
         .fact-badge {
             display: inline-block;
             background: var(--accent-color);
@@ -76,59 +141,173 @@
             font-size: 0.8em;
             margin-bottom: 10px;
         }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: var(--secondary-color);
+        }
+
+        /* Klasse zum Verstecken von Bereichen */
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>📚 Hintergrundwissen: Deutscher Bund</h1>
-        <p>Was man wissen sollte, wenn der Lehrer nachfragt.</p>
+    <header id="main-header">
+        <h1 id="header-title">🧩 Der Deutsche Flickenteppich</h1>
+        <p id="header-subtitle">Willkommen im Lern-Modus: Alles über das Deutschland von 1815!</p>
     </header>
 
     <div class="container">
-        <div class="nav-buttons">
-            <button onclick="window.location.href='index.html'">⬅️ Zurück zur Hauptseite</button>
-            <button id="theme-toggle">🌙 Modus</button>
+        <div class="controls">
+            <div>
+                <button id="btn-lernseite" class="nav-btn" onclick="switchView('lernseite')">📚 Lernseite</button>
+                <button id="btn-hintergrund" class="nav-btn outline" onclick="switchView('hintergrund')">🧑‍🏫 Lehrer-Wissen</button>
+            </div>
+            <button id="theme-toggle">🌙 Modus wechseln</button>
         </div>
 
-        <div class="card">
-            <span class="fact-badge">Wann?</span>
-            <h2>1815 bis 1866</h2>
-            <p>Der Deutsche Bund wurde nach dem Sieg über Napoleon beim <b>Wiener Kongress</b> gegründet. Er hielt etwa 50 Jahre lang.</p>
+        <!-- ==========================================
+             ANSICHT 1: LERNSEITE (Für die Schüler)
+             ========================================== -->
+        <div id="view-lernseite">
+            <section class="card">
+                <h2>Was bedeutet das eigentlich? 🗺️</h2>
+                <p>Stellt euch Deutschland wie ein riesiges Puzzle vor, das nicht richtig zusammenpasst. Nach dem Sieg gegen Napoleon trafen sich die mächtigen Chefs in Wien (der <b>Wiener Kongress</b>). Aber anstatt ein großes Land zu bauen, haben sie viele kleine "Flicken" behalten.</p>
+                <p>Es gab <b>39 einzelne Staaten</b>. Jeder hatte seinen eigenen Fürsten, seine eigenen Gesetze und oft sogar seine eigene Uhrzeit!</p>
+                
+                <div class="quiz-box">
+                    <p><b>Check dein Wissen:</b> Warum nannte man das "Flickenteppich"?</p>
+                    <button class="show-btn" onclick="toggleAnswer('a1')">Antwort zeigen</button>
+                    <p id="a1" class="answer">Weil die Landkarte durch die vielen kleinen Grenzen so bunt und zerstückelt aussah wie ein Teppich aus Stoffresten.</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Warum war das ein Problem? 🛑</h2>
+                <p>Wenn man damals als Händler Waren verkaufen wollte, war das purer Stress:</p>
+                <ul>
+                    <li><b>Zoll-Chaos:</b> An fast jeder Grenze musste man Geld bezahlen, um durchzufahren.</li>
+                    <li><b>Geld-Wirrwarr:</b> Überall gab es andere Münzen. Man musste ständig umtauschen.</li>
+                    <li><b>Maße und Gewichte:</b> Ein "Meter" war in Bayern vielleicht kürzer als in Preußen.</li>
+                </ul>
+                <p>Das verhinderte, dass Deutschland modern und reich wurde. Die Menschen fühlten sich nicht wie ein Volk.</p>
+            </section>
+
+            <section class="card">
+                <h2>Die Rolle der Fürsten 👑</h2>
+                <p>Die Fürsten liebten den Flickenteppich. Warum? Weil sie in ihren kleinen Reichen die absoluten Bosse waren. Ein großes, einiges Deutschland hätte bedeutet, dass sie Macht abgeben müssen. Deshalb taten sie alles, um Freiheit und Mitbestimmung zu verhindern.</p>
+                
+                <div class="quiz-box">
+                    <p><b>Check dein Wissen:</b> Was war das Hauptziel des Deutschen Bundes?</p>
+                    <button class="show-btn" onclick="toggleAnswer('a2')">Antwort zeigen</button>
+                    <p id="a2" class="answer">Die Sicherheit und Ruhe der Fürsten zu bewahren, nicht die Freiheit der Bürger!</p>
+                </div>
+            </section>
         </div>
 
-        <div class="card">
-            <span class="fact-badge">Wer war dabei?</span>
-            <h2>35 Fürsten & 4 freie Städte</h2>
-            <p>Es war kein echter Staat, sondern ein <b>Staatenbund</b>. Die zwei größten und wichtigsten Mächte waren <b>Preußen</b> und <b>Österreich</b>. Die beiden haben oft gestritten, wer der Boss ist.</p>
+        <!-- ==========================================
+             ANSICHT 2: HINTERGRUNDWISSEN (Für den Lehrer)
+             ========================================== -->
+        <div id="view-hintergrund" class="hidden">
+            <div class="card">
+                <span class="fact-badge">Wann?</span>
+                <h2>1815 bis 1866</h2>
+                <p>Der Deutsche Bund wurde nach dem Sieg über Napoleon beim <b>Wiener Kongress</b> gegründet. Er hielt etwa 50 Jahre lang.</p>
+            </div>
+
+            <div class="card">
+                <span class="fact-badge">Wer war dabei?</span>
+                <h2>35 Fürsten & 4 freie Städte</h2>
+                <p>Es war kein echter Staat, sondern ein <b>Staatenbund</b>. Die zwei größten und wichtigsten Mächte waren <b>Preußen</b> und <b>Österreich</b>. Die beiden haben oft gestritten, wer der Boss ist.</p>
+            </div>
+
+            <div class="card">
+                <span class="fact-badge">Was war das Ziel?</span>
+                <h2>Sicherheit & Ruhe</h2>
+                <p>Offiziell sollte der Bund Deutschland vor Angriffen (z. B. aus Frankreich) schützen. Inoffiziell wollten die Fürsten aber nur ihre Ruhe vor Revolutionen haben. Sie wollten verhindern, dass das Volk mitbestimmen darf.</p>
+            </div>
+
+            <div class="card">
+                <span class="fact-badge">Die Zentrale</span>
+                <h2>Der Bundestag in Frankfurt</h2>
+                <p>Nein, das war kein gewähltes Parlament! Dort trafen sich nur die Gesandten der Fürsten und haben diskutiert. Da jeder sein eigenes Ding machen wollte, wurde dort oft gar nichts entschieden.</p>
+            </div>
         </div>
 
-        <div class="card">
-            <span class="fact-badge">Was war das Ziel?</span>
-            <h2>Sicherheit & Ruhe</h2>
-            <p>Offiziell sollte der Bund Deutschland vor Angriffen (z. B. aus Frankreich) schützen. Inoffiziell wollten die Fürsten aber nur ihre Ruhe vor Revolutionen haben. Sie wollten verhindern, dass das Volk mitbestimmen darf.</p>
-        </div>
-
-        <div class="card">
-            <span class="fact-badge">Die Zentrale</span>
-            <h2>Der Bundestag in Frankfurt</h2>
-            <p>Nein, das war kein gewähltes Parlament! Dort trafen sich nur die Gesandten der Fürsten und haben diskutiert. Da jeder sein eigenes Ding machen wollte, wurde dort oft gar nichts entschieden.</p>
-        </div>
     </div>
 
+    <footer>
+        <p>Erstellt für das GuP-Projekt • Klasse 8</p>
+    </footer>
+
     <script>
+        // Dark Mode Logik
         const toggleBtn = document.getElementById('theme-toggle');
         const body = document.body;
 
         toggleBtn.addEventListener('click', () => {
             if (body.getAttribute('data-theme') === 'dark') {
                 body.removeAttribute('data-theme');
-                toggleBtn.textContent = '🌙 Modus';
+                toggleBtn.textContent = '🌙 Modus wechseln';
             } else {
                 body.setAttribute('data-theme', 'dark');
-                toggleBtn.textContent = '☀️ Modus';
+                toggleBtn.textContent = '☀️ Modus wechseln';
             }
         });
+
+        // Quiz Logik
+        function toggleAnswer(id) {
+            const ans = document.getElementById(id);
+            if (ans.style.display === 'block') {
+                ans.style.display = 'none';
+            } else {
+                ans.style.display = 'block';
+            }
+        }
+
+        // Ansichten wechseln (Navigation)
+        function switchView(view) {
+            const viewLernseite = document.getElementById('view-lernseite');
+            const viewHintergrund = document.getElementById('view-hintergrund');
+            const btnLernseite = document.getElementById('btn-lernseite');
+            const btnHintergrund = document.getElementById('btn-hintergrund');
+            const headerTitle = document.getElementById('header-title');
+            const headerSubtitle = document.getElementById('header-subtitle');
+
+            if (view === 'lernseite') {
+                // Lernseite anzeigen
+                viewLernseite.classList.remove('hidden');
+                viewHintergrund.classList.add('hidden');
+                body.classList.remove('hintergrund-active'); // Setzt Farbe auf Blau zurück
+                
+                // Button Styling anpassen
+                btnLernseite.classList.remove('outline');
+                btnHintergrund.classList.add('outline');
+
+                // Header Text anpassen
+                headerTitle.textContent = '🧩 Der Deutsche Flickenteppich';
+                headerSubtitle.textContent = 'Willkommen im Lern-Modus: Alles über das Deutschland von 1815!';
+
+            } else if (view === 'hintergrund') {
+                // Hintergrundwissen anzeigen
+                viewLernseite.classList.add('hidden');
+                viewHintergrund.classList.remove('hidden');
+                body.classList.add('hintergrund-active'); // Ändert das Farbschema zu Grün
+                
+                // Button Styling anpassen
+                btnHintergrund.classList.remove('outline');
+                btnLernseite.classList.add('outline');
+
+                // Header Text anpassen
+                headerTitle.textContent = '📚 Hintergrundwissen: Deutscher Bund';
+                headerSubtitle.textContent = 'Was man wissen sollte, wenn der Lehrer nachfragt.';
+            }
+        }
     </script>
 </body>
 </html>
